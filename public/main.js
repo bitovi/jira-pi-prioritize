@@ -1,26 +1,33 @@
-async function main(jiraHelpers) {
+import { PIPrioritize } from './pi-prioritize.js'
+import { route, RoutePushstate } from "//unpkg.com/can@6/core.mjs";
+// import qaMetrics from "./qa-metrics/main.js";
+
+export default async function main(jiraHelpers) {
+
 	mainElement.textContent = "Checking for Jira Access Token";
 
-	if(!jiraHelpers.hasValidAccessToken()) {
+	if (!jiraHelpers.hasValidAccessToken()) {
+		await sleep(100);
 		mainElement.textContent = "Getting access token";
+		const accessToken = await jiraHelpers.getAccessToken();
+		return;
 	}
 
 	const accessToken = await jiraHelpers.getAccessToken();
 
-	mainElement.textContent = "Got Access Token "+ accessToken;
+	mainElement.textContent = "Got Access Token";
+	mainElement.style.display = "none";
 
-	const fields = await jiraHelpers.fetchJiraFields();
+	const report = new PIPrioritize();
+	report.jiraHelpers = jiraHelpers;
+	report.mode = "TEAMS";
+	document.body.append(report);
 
-	mainElement.textContent = "Requesting field definitions";
-
-	const fieldMap = makeFieldNameToIdMap(fields);
-	mainElement.innerHTML = `Fields: ${JSON.stringify(fieldMap)}`;	
 }
 
-function makeFieldNameToIdMap(fields){
-	const map = {};
-	fields.forEach(f => {
-		map[f.name] = f.id;
-	});
-	return map;
+
+function sleep(time) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, time)
+	})
 }
